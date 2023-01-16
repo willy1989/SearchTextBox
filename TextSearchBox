@@ -1,0 +1,88 @@
+using System.Collections.Generic;
+using UnityEngine;
+using TMPro;
+using System.Text.RegularExpressions;
+
+
+/// <summary>
+/// This works similiarly to Google's search box,
+/// i.e. a list of terms are filtered based on the user's query.
+/// Each term corresponds to a button, which is either shown or hidden. 
+/// </summary>
+
+public class TextSearchBox : MonoBehaviour
+{
+    [SerializeField] private TMP_InputField inputField;
+
+    [SerializeField] private GameObject buttonPrefab;
+
+    // This is a dummy source. Replace it with your own.
+    private List<string> sourceButtonNames = new List<string>() { "cxxx",
+                                                            "axxx",
+                                                            "xxx axx",
+                                                            "bxxx",
+    };
+
+    private List<string> currentButtonNames = new List<string>();
+
+    private Dictionary<string, GameObject> buttons = new Dictionary<string, GameObject>();
+
+    private void Awake()
+    {
+        inputField.onValueChanged.AddListener(delegate { FilterButtons(FilteredButtonNames(query: inputField.text)); });
+    }
+
+    private void Start()
+    {
+        SetUpButtons();
+    }
+
+    private void SetUpButtons()
+    {
+        for (int i = 0; i < sourceButtonNames.Count; i++)
+        {
+            GameObject button = Instantiate(buttonPrefab, parent: this.transform);
+            button.GetComponentInChildren<TMP_Text>().text = sourceButtonNames[i];
+
+            buttons.Add(sourceButtonNames[i], button);
+            currentButtonNames.Add(sourceButtonNames[i]);
+        }
+    }
+
+    private List<string> FilteredButtonNames(string query)
+    {
+        List<string> filteredButtonNames = new List<string>();
+
+        Regex regex = new Regex(@"" + query);
+
+        Match match;
+
+        foreach (string item in sourceButtonNames)
+        {
+            match = regex.Match(item);
+
+            if (match.Success == true)
+            {
+                filteredButtonNames.Add(item);
+            }
+        }
+
+        return filteredButtonNames;
+    }
+
+    private void FilterButtons(List<string> filteredButtonNames)
+    {
+        foreach (string name in currentButtonNames)
+        {
+            buttons[name].gameObject.SetActive(false);
+        }
+
+        currentButtonNames.Clear();
+
+        foreach (string name in filteredButtonNames)
+        {
+            currentButtonNames.Add(name);
+            buttons[name].gameObject.SetActive(true);
+        }
+    }
+}
